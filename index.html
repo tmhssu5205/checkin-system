@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>实时签到看板</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .card { 
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        #refreshBtn {
+            padding: 10px 20px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>实时签到状态 ✅</h2>
+    <button id="refreshBtn">刷新数据</button>
+    <div id="dataContainer"></div>
+
+<script>
+// 替换为你的 Google Sheets 公开分享链接（发布到网页）
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSUMo5HEZuyyqccCudigtvKu1cXMDm0EnjoOLeLJDCTuHjBcomd1v8AXZZDa9f07-DsETrnI60Id1Ha/pubhtml';
+
+async function loadData() {
+    try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        
+        let html = '';
+        json.table.rows.slice(1).forEach(row => { // 跳过表头
+            const [time, name, location] = row.c;
+            html += `
+                <div class="card">
+                    <h3>${location.v}</h3>
+                    <p>👤 ${name.v}</p>
+                    <small>🕒 ${new Date(time.v).toLocaleString()}</small>
+                </div>
+            `;
+        });
+        
+        document.getElementById('dataContainer').innerHTML = html;
+    } catch (err) {
+        console.error('加载数据失败:', err);
+    }
+}
+
+// 首次加载 + 按钮点击刷新 + 每30秒自动刷新
+document.getElementById('refreshBtn').addEventListener('click', loadData);
+setInterval(loadData, 30000);
+loadData();
+</script>
+</body>
+</html>
